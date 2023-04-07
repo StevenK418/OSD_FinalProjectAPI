@@ -1,8 +1,9 @@
+const dotenv = require('dotenv').config(); // this loads env varsconst dotenv
 const express = require('express')
 const db = require('./database')
 const cors = require('cors');
 const app = express()
-const port = 3000
+const port = process.env.port
 const cars = require('./routes/cars');
 const home = require('./routes/home');
 const employees = require('./routes/employees');
@@ -22,6 +23,6 @@ var corsOptions = {
 
 app.use('/', home);
 app.use('/cars', cors(), cars);
-app.use('/employees', employees);
+app.use('/employees', cors(), employees);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
