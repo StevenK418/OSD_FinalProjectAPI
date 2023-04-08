@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Joi = require('Joi')
+const Joi = require('joi')
 
 const employeeSchema = new mongoose.Schema({
    
@@ -15,20 +15,16 @@ const employeeSchema = new mongoose.Schema({
 //Worksheet 6 
 function ValidateEmployee(employee)
 {
-  const driverJoiSchema = Joi.object({
-      name: Joi.String().min(2).required()
-  })
-
   const employeeJoiSchema = Joi.object({
-    firstName:  Joi.String().min(3).required(),
-    lastName: Joi.String(),
-    profilePicture: Joi.String(),
-    email:  Joi.String(),
-    phoneNumber:  Joi.String(),
-    address: Joi.String(),
-    status: Joi.boolean()
+      firstName: Joi.string,
+      lastName: Joi.string,
+      profilePicture: Joi.string,
+      email: Joi.string,
+      phoneNumber: Joi.string,
+      address: Joi.string,
+      status: Joi.boolean
   })
-  
+ 
   return employeeJoiSchema.validate(employee);
 }
 
