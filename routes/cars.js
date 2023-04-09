@@ -1,151 +1,89 @@
+//AXIOS Implementation
+const axios = require('axios');
 const express = require('express');
 const router = express.Router();
 
 const {Car, ValidateCar} = require('../models/cars');
 
-// Get routes
-//New get using db
+//GET ALL EMPLOYEES
 router.get('/', async (req, res) => {
-  
-      //Worksheet 5 Filtering functionality
-      const { car_model, location, plateid, status, limit, pagesize, url, driver} = req.query;
+  try {
+    const response = await axios.get(process.env.API_GATEWAY + '/cars');
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error fetching data from API Gateway');
+  }
+});
 
-      let filter = {};
+//POST
+router.post('/', (req, res) => {
+  const data = req.body;
+  const config = {
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+  axios.post(`${process.env.API_GATEWAY}/cars`, data, config)
+    .then((response) => {
+      console.log(req.body);
+      res.send(response.data);
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send('Error');
+    });
+});
 
-      if(car_model)
-      {
-        filter.car_model = {$regex: `${car_model}`, $options: `i`}
-      }
+//PUT
+router.put('/:id', (req, res) => {
+  const userId = req.params.id;
+  const userData = req.body;
 
-      if(location)
-      {
-        filter.location = location
-      }
+  axios.put(`${process.env.API_GATEWAY}/cars/`+ req.params.id, userData)
+    .then(response => {
+      res.status(200).json(response.data);
+    })
+    .catch(error => {
+      res.status(500).json(error);
+    });
+});
 
-      if(plateid)
-      {
-        filter.plate_id = plateid
-      }
-
-      if(status)
-      {
-        filter.status = status
-      }
-
-      if(url)
-      {
-        filter.url = url
-      }
-
-      if(driver)
-      {
-        filter.driver = driver
-      }
-
-      let pageSizeNumber = parseInt(pagesize);
-
-      if(isNaN(pageSizeNumber))
-      {
-        pageSizeNumber = 0;
-      }
-
-      let limitNumber = parseInt(limit);
-
-      if(isNaN(limitNumber))
-      {
-        limitNumber = 0;
-      }
-
-      //Print a table of the filtered results. 
-      console.table(filter);
-
-      //Get list of cars
-      const cars = await Car.
-                          find(filter).
-                          limit(pageSizeNumber).
-                          sort({plate_id: 1, status : -1}).
-                          skip(limit, pageSizeNumber).
-                          select('car_model driver location plate_id status url');
-      res.json(cars);
-      //end of testing
+//DELETE
+//This works but returns nothing to express so a 204 no content ill be thrown but
+//record will be deleted via lambda. 
+router.delete('/:id', async (req, res) => {
+try 
+{
+  const car= await axios.delete(`${process.env.API_GATEWAY}/cars/`+ req.params.id);
+  if (car)
+    res.status(204).send();
+  else
+    res.status(404).json(`Car with that ID ${req.params.id} was not found`)
+}
+catch 
+{
+  res.status(404).json(`funny id ${req.params.id} was not found`);
+}
 })
 
-//Get car by id
+//GETs an employee with specific id
 router.get('/:id', async (req,res) => {
   try
   {
-    const car = await Car.findById(req.params.id);
+    const car = await axios.get(`${process.env.API_GATEWAY}/cars/`+req.params.id)
     if(car)
     {
-      res.json(car);
+      res.json(car.data);
     }
     else{
-      res.status(404).send("Car not found!");
+      res.status(404).send("car not found!");
     }
   }
   catch(error)
   {
     res.status(404).send("Not found! ID was Not valid format!" + error);
   }
-})
-
-//Post routes
-//Post new car to the database
-router.post('/', async (req, res) => {
-
- 
-  let result = ValidateCar(req.body)
-  
-  if (result.error) {
-    res.status(400).json(result.error);
-    return;
-  }
-
-  let car = new Car(req.body);
-
-  try {
-      car = await car.save()
-      res
-      .location(`${car._id}`)
-      .status(201)
-      .json(car)
-  }
-  catch (error){
-      res.status(500).send('db_error ' + error)
-  }
-});
-
-//Delete routes using explicit car id
-router.delete('/:id', async (req, res) => {
-  try 
-  {
-    const car = await Car.findByIdAndDelete(req.params.id);
-    if (car)
-      res.status(204).send();
-    else
-      res.status(404).json(`car with that ID ${req.params.id} was not found`)
-  }
-  catch 
-  {
-    res.status(404).json(`funny id ${req.params.id} was not found`);
-  }
-})
-
-//PUT routes
-router.put('/:id', async (req, res)=>{
-  try 
-  {
-    let car = await Car.findByIdAndUpdate(req.params.id, req.body);
-    car = await car.save();
-    res
-    .location(`${car._id}`)
-    .status(200)
-    .json(car)
-  } 
-  catch (error) 
-  {
-    res.status(500).send("dbError" + error);
-  }
-})
+  })
 
 module.exports = router;
