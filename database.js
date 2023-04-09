@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 
-const connectionString = process.env.connection_String
+const connectionString = process.env.CONNECTION_STRING
 
 mongoose.connect(connectionString, {"useNewURLParser":true,"useUnifiedTopology": true})
 .catch (error => {
